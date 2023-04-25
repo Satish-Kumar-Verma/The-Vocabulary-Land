@@ -71,26 +71,72 @@ def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
     if limit is None:
         if sort:
             cursor.execute(f'''SELECT Word, W_Meaning FROM PJ_Vocab.meaning WHERE M_Code IN 
-                            (SELECT M_Code FROM {mark_as}_word) ORDER BY Word ASC;''')
+                            (SELECT M_Code FROM {mark_as}_word WHERE M_Code != 'N/A') ORDER BY Word ASC;''')
 
         else:
             cursor.execute(f'''SELECT Word, W_Meaning FROM PJ_Vocab.meaning WHERE M_Code IN 
-                                        (SELECT M_Code FROM {mark_as}_word);''')
+                                        (SELECT M_Code FROM {mark_as}_word WHERE M_Code != 'N/A');''')
 
     else:
         if sort:
             cursor.execute(f'''SELECT Word, W_Meaning FROM PJ_Vocab.meaning WHERE M_Code IN 
-                                        (SELECT M_Code FROM {mark_as}_word) ORDER BY Word ASC LIMIT {limit};''')
+                                        (SELECT M_Code FROM {mark_as}_word WHERE M_Code != 'N/A') 
+                                        ORDER BY Word ASC LIMIT {limit};''')
 
         else:
             cursor.execute(f'''SELECT Word, W_Meaning FROM PJ_Vocab.meaning WHERE M_Code IN 
-                                        (SELECT M_Code FROM {mark_as}_word) LIMIT {limit};''')
+                                        (SELECT M_Code FROM {mark_as}_word WHERE M_Code != 'N/A') LIMIT {limit};''')
 
     data = cursor.fetchall()
     if _display_:
         display(['Word', 'W_Meaning'], data)
 
     return data
+
+
+def move_word(cursor, connection, from_tb, to_tb, m_code):
+    try:
+        primary_columns = {'bookmark_word': 'B_Code', 'favourite_word': 'FN_Code',
+                           'new_word': 'N_Code', 'known_word': 'KN_Code'}
+        primary_index = {'bookmark_word': 'B_', 'favourite_word': 'FN_',
+                         'new_word': 'N_', 'known_word': 'KN_'}
+
+        if check_existence(cursor, m_code, from_tb) and not check_existence(cursor, m_code, to_tb):
+
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            cursor.execute(f"UPDATE PJ_Vocab.{from_tb} SET M_Code='N/A' WHERE M_Code='{m_code}';")
+
+            print(f"[+] 1 row is removed from {from_tb} table!")
+
+            cursor.execute(f"SELECT COUNT(*) FROM {to_tb};")
+
+            row_count = cursor.fetchone()[0] + 1
+
+            sql = f'INSERT INTO PJ_Vocab.{to_tb} ({primary_columns[to_tb]}, M_Code) VALUE (%s, %s)'
+            val = (f'{primary_index[to_tb]}{row_count}', m_code)
+
+            cursor.execute(sql, val)
+
+            connection.commit()
+
+            print(f"[+] 1 row is inserted into {to_tb} table!")
+
+        else:
+            print(f'[-] Data is not found in {from_tb} table!')
+
+    except Exception as e:
+        connection.rollback()
+        print(e)
+
+
+def check_existence(cursor, m_code, table):
+    cursor.execute(f"SELECT COUNT(*) FROM {table} WHERE M_Code='{m_code}';")
+
+    result = cursor.fetchone()
+
+    if result[0] == 1:
+        return True
+    return False
 
 
 def insert_meaning(connection, cursor, no_of_rows=1):
@@ -115,7 +161,7 @@ def insert_meaning(connection, cursor, no_of_rows=1):
         connection.rollback()
 
 
-def welcome(cursor, limit_choice):
+def welcome(cursor, connection, limit_choice):
     print('            +---------------------------------------------------------------------------------------------+')
     print('            |                                                                                             |')
     print('            |                                    Welcome to Vocabulary Land                               |')
@@ -124,10 +170,15 @@ def welcome(cursor, limit_choice):
 
     print("\n\n")
 
-    data = read_marked_data(cursor, 'bookmark', limit=limit_choice, _display_=False)
-    print(f"Do you know the meaning of this word : {data[randint(0, limit_choice)][0]}")
+    move_word(cursor, connection, 'bookmark_word', 'new_word', 'M_1')
 
-    _ = input("[Y] for Yes [N] for No : ")
+    data = read_marked_data(cursor, 'bookmark', limit=limit_choice - 1)
+    print(f"Do you know the meaning of this word : {data[randint(0, limit_choice - 1)][0]}")
+
+    choice = input("[Y] for Yes [N] for No : ")
+
+    if choice.lower() == 'y':
+        pass
 
     print("\nHere are some random words which are new to you along with the word you are quizzed!\n")
 
@@ -140,11 +191,11 @@ def main():
 
         if connection.is_connected():
             cursor = connection.cursor()
-            welcome(cursor, 5)
+            welcome(cursor, connection, 5)
             # insert_meaning(connection, cursor, 1)
             # read_meaning(cursor, 'Meaning', sort=True)
-            # mark_word(connection, cursor, 'Water', 'new')
-            # read_marked_data(cursor, 'favourite', sort=False)
+            # mark_word(connection, cursor, 'legit', 'bookmark')
+            # read_marked_data(cursor, 'bookmark', sort=True, _display_=True)
 
         connection.close()
 

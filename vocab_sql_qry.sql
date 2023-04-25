@@ -181,6 +181,12 @@ SELECT Word, W_Meaning FROM meaning WHERE M_Code IN
 ) order by Word ASC LIMIT 3;
 
 
+SET FOREIGN_KEY_CHECKS=0;
+update PJ_Vocab.bookmark_word
+SET M_Code = "M_11" WHERE M_Code = 'N/A';
+
+INSERT INTO PJ_Vocab.bookmark_word VALUE ('B_1', 'M_1');
+
 
 
 
