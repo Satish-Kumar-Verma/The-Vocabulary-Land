@@ -94,35 +94,67 @@ def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
     return data
 
 
-def move_word(cursor, connection, from_tb, to_tb, m_code):
+def remove_word(cursor, connection, table, word):
     try:
+        table = table + "_word"
+        cursor.execute(f"SELECT M_Code FROM PJ_Vocab.meaning WHERE Word='{word}';")
+        m_code = cursor.fetchone()[0]
+
+        cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+        cursor.execute(f"UPDATE PJ_Vocab.{table} SET M_Code='N/A' WHERE M_Code='{m_code}';")
+
+        print(f"'{word}' is removed from the {table} table!")
+
+        connection.commit()
+
+    except Exception as e:
+        print(e)
+        connection.rollback()
+
+
+def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
+    try:
+
+        from_tb = from_tb + "_word"
+        to_tb = to_tb + "_word"
+
+        cursor.execute(f"SELECT M_Code FROM PJ_Vocab.meaning WHERE Word='{word}';")
+
+        m_code = cursor.fetchone()[0]
+
         primary_columns = {'bookmark_word': 'B_Code', 'favourite_word': 'FN_Code',
                            'new_word': 'N_Code', 'known_word': 'KN_Code'}
         primary_index = {'bookmark_word': 'B_', 'favourite_word': 'FN_',
                          'new_word': 'N_', 'known_word': 'KN_'}
 
-        if check_existence(cursor, m_code, from_tb) and not check_existence(cursor, m_code, to_tb):
+        if check_existence(cursor, m_code, from_tb) == 1:
 
-            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
-            cursor.execute(f"UPDATE PJ_Vocab.{from_tb} SET M_Code='N/A' WHERE M_Code='{m_code}';")
+            if check_existence(cursor, m_code, to_tb) == 0:
 
-            print(f"[+] 1 row is removed from {from_tb} table!")
+                if action.lower() == 'move':
+                    cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+                    cursor.execute(f"UPDATE PJ_Vocab.{from_tb} SET M_Code='N/A' WHERE M_Code='{m_code}';")
 
-            cursor.execute(f"SELECT COUNT(*) FROM {to_tb};")
+                    print(f"[+] 1 row is removed from {from_tb} table!")
 
-            row_count = cursor.fetchone()[0] + 1
+                cursor.execute(f"SELECT COUNT(*) FROM {to_tb};")
 
-            sql = f'INSERT INTO PJ_Vocab.{to_tb} ({primary_columns[to_tb]}, M_Code) VALUE (%s, %s)'
-            val = (f'{primary_index[to_tb]}{row_count}', m_code)
+                row_count = cursor.fetchone()[0] + 1
 
-            cursor.execute(sql, val)
+                sql = f'INSERT INTO PJ_Vocab.{to_tb} ({primary_columns[to_tb]}, M_Code) VALUE (%s, %s)'
+                val = (f'{primary_index[to_tb]}{row_count}', m_code)
 
-            connection.commit()
+                cursor.execute(sql, val)
 
-            print(f"[+] 1 row is inserted into {to_tb} table!")
+                connection.commit()
+
+                print(f"[+] 1 row is inserted into {to_tb} table!")
+
+            else:
+                print(f"[-] The data already exists in the {to_tb} table!")
 
         else:
-            print(f'[-] Data is not found in {from_tb} table!')
+            print(f'[-] Data is not found in {from_tb} table')
 
     except Exception as e:
         connection.rollback()
@@ -131,12 +163,9 @@ def move_word(cursor, connection, from_tb, to_tb, m_code):
 
 def check_existence(cursor, m_code, table):
     cursor.execute(f"SELECT COUNT(*) FROM {table} WHERE M_Code='{m_code}';")
-
     result = cursor.fetchone()
 
-    if result[0] == 1:
-        return True
-    return False
+    return result[0]
 
 
 def insert_meaning(connection, cursor, no_of_rows=1):
@@ -170,19 +199,37 @@ def welcome(cursor, connection, limit_choice):
 
     print("\n\n")
 
-    move_word(cursor, connection, 'bookmark_word', 'new_word', 'M_1')
+    data = read_marked_data(cursor, 'bookmark')
 
-    data = read_marked_data(cursor, 'bookmark', limit=limit_choice - 1)
-    print(f"Do you know the meaning of this word : {data[randint(0, limit_choice - 1)][0]}")
+    quiz_word = data[randint(0, len(data) - 1)]
+
+    print(f"Do you know the meaning of this word : {quiz_word[0]}")
 
     choice = input("[Y] for Yes [N] for No : ")
 
-    if choice.lower() == 'y':
-        pass
+    if choice.lower() == 'n':
+        transfer_word(cursor, connection, 'bookmark', 'new', quiz_word[0], 'copy')
+        remove_word(cursor, connection, 'known', quiz_word[0])
+
+    elif choice.lower() == 'y':
+        transfer_word(cursor, connection, 'bookmark', 'known', quiz_word[0], 'copy')
+        remove_word(cursor, connection, 'new', quiz_word[0])
 
     print("\nHere are some random words which are new to you along with the word you are quizzed!\n")
 
-    display(['Word', 'Meaning'], data)
+    tmp_data = [quiz_word]
+
+    if len(data) <= limit_choice:
+        limit_choice = len(data)
+
+    i = 1
+    while i < limit_choice:
+        tp = data[randint(0, len(data) - 1)]
+        if tp not in tmp_data:
+            tmp_data.append(tp)
+            i += 1
+
+    display(['Word', 'Meaning'], tmp_data)
 
 
 def main():
@@ -191,11 +238,13 @@ def main():
 
         if connection.is_connected():
             cursor = connection.cursor()
-            welcome(cursor, connection, 5)
+            welcome(cursor, connection, limit_choice=5)
             # insert_meaning(connection, cursor, 1)
             # read_meaning(cursor, 'Meaning', sort=True)
             # mark_word(connection, cursor, 'legit', 'bookmark')
             # read_marked_data(cursor, 'bookmark', sort=True, _display_=True)
+
+            # need to work on commands and optimization
 
         connection.close()
 
