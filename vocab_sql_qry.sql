@@ -23,6 +23,13 @@ CREATE TABLE Known_Word
     FOREIGN KEY (M_Code) REFERENCES Meaning (M_Code)
 );
 
+CREATE TABLE Quiz_History
+(
+	Q_Code VARCHAR(10) PRIMARY KEY,
+    Score TINYINT,
+    Quiz_Date VARCHAR(20)
+);
+
 CREATE TABLE Bookmark_Word
 (
 	B_Code VARCHAR(10) PRIMARY KEY,

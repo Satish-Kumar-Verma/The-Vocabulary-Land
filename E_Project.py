@@ -39,24 +39,23 @@ def mark_word(connection, cursor, word, mark_as):
         connection.rollback()
 
 
-def read_meaning(cursor, table, limit=None, sort=False):
-    table = table.lower()
-    cursor.execute(f'SHOW COLUMNS FROM PJ_Vocab.{table};')
+def read_meaning(cursor, limit=None, sort=False, _display_=False):
+    cursor.execute('SHOW COLUMNS FROM PJ_Vocab.meaning;')
     col_names = cursor.fetchall()
     col_names = [cols[0] for cols in col_names][1:]
 
     if sort:
         if limit is None:
-            cursor.execute(f'SELECT Word, W_Meaning FROM PJ_Vocab.{table} ORDER BY Word ASC;')
+            cursor.execute('SELECT Word, W_Meaning FROM PJ_Vocab.meaning ORDER BY Word ASC;')
         else:
-            cursor.execute(f'SELECT Word, W_Meaning FROM PJ_Vocab.{table} ORDER BY Word ASC LIMIT {limit};')
+            cursor.execute('SELECT Word, W_Meaning FROM PJ_Vocab.meaning ORDER BY Word ASC LIMIT {limit};')
 
     else:
         if limit is None:
-            cursor.execute(f'SELECT Word, W_Meaning FROM {table};')
+            cursor.execute(f'SELECT Word, W_Meaning FROM PJ_Vocab.meaning;')
 
         else:
-            cursor.execute(f'SELECT Word, W_Meaning FROM {table} LIMIT {limit};')
+            cursor.execute(f'SELECT Word, W_Meaning FROM PJ_Vocab.meaning LIMIT {limit};')
 
     data = cursor.fetchall()
 
@@ -64,7 +63,10 @@ def read_meaning(cursor, table, limit=None, sort=False):
     # table.align = 'l'
     # print(table)
 
-    display(col_names, data)
+    if _display_:
+        display(col_names, data)
+
+    return data
 
 
 def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
@@ -90,7 +92,6 @@ def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
     data = cursor.fetchall()
     if _display_:
         display(['Word', 'W_Meaning'], data)
-
     return data
 
 
@@ -193,7 +194,7 @@ def insert_meaning(connection, cursor, no_of_rows=1):
 def welcome(cursor, connection, limit_choice):
     print('            +---------------------------------------------------------------------------------------------+')
     print('            |                                                                                             |')
-    print('            |                                    Welcome to Vocabulary Land                               |')
+    print('            |                                  Welcome to Vocabulary Land                                 |')
     print('            |                                                                                             |')
     print('            +---------------------------------------------------------------------------------------------+')
 
@@ -232,19 +233,71 @@ def welcome(cursor, connection, limit_choice):
     display(['Word', 'Meaning'], tmp_data)
 
 
+def create_questions(data, quiz_words, noq):
+    questions = {}
+    temp_data = dict(data)
+    for i in range(noq):
+        temp_li = []
+        correct_included = False
+        j = 0
+        while j < 4:
+            choice = data[randint(0, len(data) - 1)][1]
+            correct_choice = temp_data[quiz_words[i]]
+            if not correct_included and randint(1, 5) == 3:
+                temp_li.append(correct_choice)
+                correct_included = True
+                j += 1
+
+            elif choice not in temp_li and choice != correct_choice:
+                temp_li.append(choice)
+                j += 1
+
+        questions[quiz_words[i]] = temp_li
+
+    # for i in questions.keys():
+    #     print(f'{i} : {questions[i]}')
+    # # print(questions)
+
+    return questions
+
+
+def quiz(cursor, quiz_length=3):
+    # print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    data = read_meaning(cursor)
+    quiz_words = []
+    if len(data) <= quiz_length:
+        quiz_length = len(data)
+
+    i = 1
+    while i <= quiz_length:
+        tp = data[randint(0, len(data) - 1)][0]
+        if tp not in quiz_words:
+            quiz_words.append(tp)
+            i += 1
+
+    questions = create_questions(data, quiz_words, quiz_length)
+
+
 def main():
     try:
         connection = ct.connect(user='hla', password='miitCSE013!23', host='localhost', port=3306, database='PJ_Vocab')
 
         if connection.is_connected():
             cursor = connection.cursor()
-            welcome(cursor, connection, limit_choice=5)
+            quiz(cursor, 3)
+            # welcome(cursor, connection, limit_choice=5)
             # insert_meaning(connection, cursor, 1)
             # read_meaning(cursor, 'Meaning', sort=True)
             # mark_word(connection, cursor, 'legit', 'bookmark')
             # read_marked_data(cursor, 'bookmark', sort=True, _display_=True)
 
             # need to work on commands and optimization
+
+            commands = {'quiz': 'Want to take a quiz', 'find_meaning': 'Find the meaning of a word',
+                        'total_known': 'Find out how many vocabs you know.',
+                        'total_new': 'Find out how many new vocabs for you.'}
+
+            # choice = input("")
 
         connection.close()
 
