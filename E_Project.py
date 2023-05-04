@@ -233,17 +233,29 @@ def welcome(cursor, connection, limit_choice):
     display(['Word', 'Meaning'], tmp_data)
 
 
+def rotate(ans_list):
+    r_number = randint(0, 10)
+
+    # ans_list = [1, 2, 3, 4, 5, 6, 7]
+
+    ans_list = (ans_list[len(ans_list) - r_number:len(ans_list)] + ans_list[0:len(ans_list) - r_number])
+
+    return ans_list
+
+
 def create_questions(data, quiz_words, noq):
     questions = {}
+    answers = []
     temp_data = dict(data)
     for i in range(noq):
         temp_li = []
         correct_included = False
+        correct_choice = temp_data[quiz_words[i]]
+        answers.append(correct_choice)
         j = 0
         while j < 4:
             choice = data[randint(0, len(data) - 1)][1]
-            correct_choice = temp_data[quiz_words[i]]
-            if not correct_included and randint(1, 5) == 3:
+            if not correct_included:
                 temp_li.append(correct_choice)
                 correct_included = True
                 j += 1
@@ -252,18 +264,22 @@ def create_questions(data, quiz_words, noq):
                 temp_li.append(choice)
                 j += 1
 
+        temp_li = rotate(temp_li)
+
         questions[quiz_words[i]] = temp_li
 
-    # for i in questions.keys():
-    #     print(f'{i} : {questions[i]}')
-    # # print(questions)
+    # for key, val in questions.items():
+    #     print(f'{key} : {val}')
+    # print(questions)
 
-    return questions
+    return questions, answers
 
 
-def quiz(cursor, quiz_length=3):
+def create_quiz(cursor, quiz_length=3):
     # print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     data = read_meaning(cursor)
+    answered = {}
+    total_marks = 0
     quiz_words = []
     if len(data) <= quiz_length:
         quiz_length = len(data)
@@ -275,7 +291,34 @@ def quiz(cursor, quiz_length=3):
             quiz_words.append(tp)
             i += 1
 
-    questions = create_questions(data, quiz_words, quiz_length)
+    questions, answers = create_questions(data, quiz_words, quiz_length)
+
+    print(answers)
+
+    q_number = 0
+
+    for key in questions.keys():
+        print(f"\nChoose the correct meaning of the word : {key}")
+
+        ans_choice = questions[key]
+        for i in range(len(ans_choice)):
+            print(f"[{i + 1}] --> {ans_choice[i]}")
+
+        choice = int(input("Choose the correct number : ")) - 1
+
+        if ans_choice[choice] == answers[q_number]:
+            total_marks += 1
+            answered[key] = [True, answers[q_number]]
+
+        else:
+            answered[key] = [False, answers[q_number]]
+
+        q_number += 1
+
+    for key, val in answered.items():
+        print(f"{key} : {val}")
+
+    print(f"Total marks : {total_marks}")
 
 
 def main():
@@ -284,7 +327,7 @@ def main():
 
         if connection.is_connected():
             cursor = connection.cursor()
-            quiz(cursor, 3)
+            create_quiz(cursor, 3)
             # welcome(cursor, connection, limit_choice=5)
             # insert_meaning(connection, cursor, 1)
             # read_meaning(cursor, 'Meaning', sort=True)
