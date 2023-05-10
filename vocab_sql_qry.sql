@@ -25,7 +25,7 @@ CREATE TABLE Known_Word
 
 CREATE TABLE Quiz_History
 (
-	Q_Code VARCHAR(10) PRIMARY KEY,
+	Q_ID VARCHAR(10) PRIMARY KEY,
     Score TINYINT,
     Quiz_Date VARCHAR(20)
 );
@@ -195,5 +195,6 @@ SET M_Code = "M_11" WHERE M_Code = 'N/A';
 INSERT INTO PJ_Vocab.bookmark_word VALUE ('B_1', 'M_1');
 
 
+SELECT Score, Quiz_Date FROM PJ_Vocab.Quiz_History ORDER BY Quiz_Date DESC;
 
-
+Drop table PJ_Vocab.Quiz_History;

@@ -1,7 +1,8 @@
 from mysql import connector as ct
 from random import randint
-from prettytable import PrettyTable  # , from_db_cursor
+from prettytable import PrettyTable, from_db_cursor
 # from prettytable.colortable import ColorTable, Themes
+import datetime
 
 
 def display(column_names, data):
@@ -37,6 +38,14 @@ def mark_word(connection, cursor, word, mark_as):
     except Exception as e:
         print(e)
         connection.rollback()
+
+
+def show_quiz_history(cursor):
+    cursor.execute('SELECT Q_ID, Score, Quiz_Date AS "Quiz Time" FROM PJ_Vocab.Quiz_History ORDER BY Quiz_Date DESC')
+
+    table = from_db_cursor(cursor)
+    table.align = 'l'
+    print(table)
 
 
 def read_meaning(cursor, limit=None, sort=False, _display_=False):
@@ -104,7 +113,7 @@ def remove_word(cursor, connection, table, word):
         cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
         cursor.execute(f"UPDATE PJ_Vocab.{table} SET M_Code='N/A' WHERE M_Code='{m_code}';")
 
-        print(f"'{word}' is removed from the {table} table!")
+        # print(f"'{word}' is removed from the {table} table!")
 
         connection.commit()
 
@@ -136,7 +145,7 @@ def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
                     cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
                     cursor.execute(f"UPDATE PJ_Vocab.{from_tb} SET M_Code='N/A' WHERE M_Code='{m_code}';")
 
-                    print(f"[+] 1 row is removed from {from_tb} table!")
+                    # print(f"[+] 1 row is removed from {from_tb} table!")
 
                 cursor.execute(f"SELECT COUNT(*) FROM {to_tb};")
 
@@ -149,13 +158,13 @@ def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
 
                 connection.commit()
 
-                print(f"[+] 1 row is inserted into {to_tb} table!")
+                # print(f"[+] 1 row is inserted into {to_tb} table!")
 
-            else:
-                print(f"[-] The data already exists in the {to_tb} table!")
+            # else:
+            #     print(f"[-] The data already exists in the {to_tb} table!")
 
-        else:
-            print(f'[-] Data is not found in {from_tb} table')
+        # else:
+        #     print(f'[-] Data is not found in {from_tb} table')
 
     except Exception as e:
         connection.rollback()
@@ -169,7 +178,7 @@ def check_existence(cursor, m_code, table):
     return result[0]
 
 
-def insert_meaning(connection, cursor, no_of_rows=1):
+def insert_word(connection, cursor, no_of_rows=1):
     try:
         for i in range(no_of_rows):
             word = input("Word : ")
@@ -185,6 +194,24 @@ def insert_meaning(connection, cursor, no_of_rows=1):
 
         connection.commit()
         print(f"{no_of_rows} row(s) inserted!")
+
+    except Exception as e:
+        print(e)
+        connection.rollback()
+
+
+def log_quiz_info(connection, cursor, score, q_time):
+    try:
+
+        cursor.execute('SELECT COUNT(Q_ID) FROM PJ_Vocab.Quiz_History;')
+        count = cursor.fetchone()[0] + 1
+
+        sql = 'INSERT INTO PJ_Vocab.Quiz_History (Q_ID, Score, Quiz_Date) VALUES (%s, %s, %s)'
+        val = (f'Q_{count}', score, q_time)
+
+        cursor.execute(sql, val)
+        connection.commit()
+        print(f'\nQuiz has been performed at {q_time}.\n')
 
     except Exception as e:
         print(e)
@@ -275,8 +302,7 @@ def create_questions(data, quiz_words, noq):
     return questions, answers
 
 
-def create_quiz(cursor, quiz_length=3):
-    # print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+def create_quiz(connection, cursor, quiz_length=3):
     data = read_meaning(cursor)
     answered = {}
     total_marks = 0
@@ -293,9 +319,9 @@ def create_quiz(cursor, quiz_length=3):
 
     questions, answers = create_questions(data, quiz_words, quiz_length)
 
-    print(answers)
-
     q_number = 0
+
+    quiz_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     for key in questions.keys():
         print(f"\nChoose the correct meaning of the word : {key}")
@@ -315,10 +341,44 @@ def create_quiz(cursor, quiz_length=3):
 
         q_number += 1
 
-    for key, val in answered.items():
-        print(f"{key} : {val}")
+    log_quiz_info(connection, cursor, total_marks, quiz_time)
 
-    print(f"Total marks : {total_marks}")
+    temp = 0
+    for key, val in answered.items():
+        if val[0]:
+            print(f"No.{temp + 1} [Correct!] {key} : {val[1]}")
+
+        else:
+            print(f"No.{temp + 1} [Incorrect!] {key} : {val[1]}")
+
+        temp += 1
+
+    print(f"\nTotal marks : {total_marks}")
+
+
+def find_word(cursor, word):
+    try:
+        cursor.execute(f'SELECT W_Meaning FROM PJ_Vocab.meaning WHERE Word = "{word}"')
+        result = cursor.fetchone()[0]
+        print(type(result))
+
+    except Exception as e:
+        print(f"\nThe word '{word}' might not exist in the database!")
+        print(e, "\n")
+
+
+def total_known(cursor):
+    cursor.execute('SELECT COUNT(*) FROM PJ_Vocab.known_word WHERE M_Code != "N/A";')
+    count = cursor.fetchall()[0][0]
+    print(f'You have {count} known words')
+    read_marked_data(cursor, 'known', sort=True, _display_=True)
+
+
+def total_new(cursor):
+    cursor.execute('SELECT COUNT(*) FROM PJ_Vocab.new_word WHERE M_Code != "N/A";')
+    count = cursor.fetchall()[0][0]
+    print(f'You have {count} new words')
+    read_marked_data(cursor, 'new', sort=True, _display_=True)
 
 
 def main():
@@ -327,8 +387,8 @@ def main():
 
         if connection.is_connected():
             cursor = connection.cursor()
-            create_quiz(cursor, 3)
-            # welcome(cursor, connection, limit_choice=5)
+            # create_quiz(connection, cursor, 3)
+            welcome(cursor, connection, limit_choice=5)
             # insert_meaning(connection, cursor, 1)
             # read_meaning(cursor, 'Meaning', sort=True)
             # mark_word(connection, cursor, 'legit', 'bookmark')
@@ -336,11 +396,49 @@ def main():
 
             # need to work on commands and optimization
 
-            commands = {'quiz': 'Want to take a quiz', 'find_meaning': 'Find the meaning of a word',
+            commands = {'quiz': 'Want to take a quiz.', 'find_meaning': 'Find the meaning of a word.',
                         'total_known': 'Find out how many vocabs you know.',
-                        'total_new': 'Find out how many new vocabs for you.'}
+                        'total_new': 'Find out how many new vocabs for you.',
+                        'insert_new_word': 'Insert new meaning into the database.',
+                        'show_bookmark': 'Show the bookmarked words',
+                        'quiz_history': 'Show the history of all performed quizzes.',
+                        'quit': 'Exit from the application.'}
+            i = 1
+            for key, val in commands.items():
+                print(f'{i}. {key}{" " * (15 - len(key))} - {val}')
+                i += 1
 
-            # choice = input("")
+            while True:
+                choice = int(input("What is your choice (number) : "))
+
+                if choice == 1:
+                    create_quiz(connection, cursor, 3)
+
+                elif choice == 2:
+                    word = input("Enter the word : ")
+                    find_word(cursor, word=word)
+
+                elif choice == 3:
+                    total_known(cursor)
+
+                elif choice == 4:
+                    total_new(cursor)
+
+                elif choice == 5:
+                    print('Insert a new word.')
+                    insert_word(connection, cursor, 1)
+
+                elif choice == 6:
+                    print('\nDisplaying bookmarked words.\n')
+                    read_marked_data(cursor, 'bookmark', sort=True, _display_=True)
+
+                elif choice == 7:
+                    print('\nDisplaying quiz history.\n')
+                    show_quiz_history(cursor)
+
+                elif choice == 8:
+                    print('Bye')
+                    break
 
         connection.close()
 
