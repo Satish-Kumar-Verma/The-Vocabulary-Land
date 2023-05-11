@@ -6,6 +6,10 @@ import datetime
 
 
 def display(column_names, data):
+    """
+    This function just displays the data in a pretty table.
+    """
+
     table = PrettyTable(align='l')
     table.field_names = column_names
     table.add_rows(data)
@@ -124,7 +128,6 @@ def remove_word(cursor, connection, table, word):
 
 def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
     try:
-
         from_tb = from_tb + "_word"
         to_tb = to_tb + "_word"
 
@@ -294,10 +297,6 @@ def create_questions(data, quiz_words, noq):
         temp_li = rotate(temp_li)
 
         questions[quiz_words[i]] = temp_li
-
-    # for key, val in questions.items():
-    #     print(f'{key} : {val}')
-    # print(questions)
 
     return questions, answers
 
