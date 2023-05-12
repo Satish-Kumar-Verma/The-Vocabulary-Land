@@ -23,6 +23,8 @@ CREATE TABLE Known_Word
     FOREIGN KEY (M_Code) REFERENCES Meaning (M_Code)
 );
 
+USE PJ_Vocab;
+
 CREATE TABLE Quiz_History
 (
 	Q_ID VARCHAR(10) PRIMARY KEY,
