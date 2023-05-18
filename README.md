@@ -77,7 +77,7 @@ Our app UI design will be updated for multiplatform after version(1.5.0). Please
 ### Contact
 Hla Min Naing - hlaminnaing013@gmail.com<br>
 Khant Pyae Phyo - khantpyaephyo@gmail.com<br>
-Hnin Ei Shwe Yee - hnineishweyee3152003@gmail.com<br>
+Hnin Ei Shwe Yee - papillonxyuki@gmail.com<br>
 Project Link - https://github.com/Satish-Kumar-Verma/The-Vocabulary-Land
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
