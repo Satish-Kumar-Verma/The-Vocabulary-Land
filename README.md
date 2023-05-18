@@ -23,7 +23,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-There have been many applications to study vocabularies of many languages. We are now develping an application called 'The vocabulary Land'.We are creating it as a user-friendly and free. We are noe currently developing version 1.3.1. For version 1.3.0 here are some features provided for you. 
+There have been many applications to study vocabularies of many languages. We are now develping an application called 'The vocabulary Land'. We are creating it as a user-friendly and free. We are now currently developing version 1.3.1. For version 1.3.0 here are some features provided for you. 
 
 * When you start the app there will be a quiz that will test you. 
 * There will be a dictionary space that you can learn new words.
@@ -75,7 +75,9 @@ Our app UI design will be updated for multiplatform after version(1.5.0). Please
 
 <!-- CONTACT -->
 ### Contact
-Hla Min Naing - programming001.c@gmail.com
+Hla Min Naing - hlaminnaing013@gmail.com
+Khant Pyae Phyo - khantpyaephyo@gmail.com
+Hnin Ei Shwe Yee - hnineishweyee3152003@gmail.com
 Project Link - https://github.com/Satish-Kumar-Verma/The-Vocabulary-Land
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
