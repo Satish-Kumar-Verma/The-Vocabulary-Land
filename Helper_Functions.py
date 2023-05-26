@@ -5,8 +5,10 @@ import datetime
 
 
 def display(column_names, data):
+
     """
     This function just displays the data in a pretty table.
+
     """
 
     table = PrettyTable(align='l')
@@ -16,6 +18,12 @@ def display(column_names, data):
 
 
 def mark_word(connection, cursor, word, mark_as):
+
+    """
+    Mark the particular word as (bookmark / favorite / new / known ) word.
+
+    """
+
     try:
         primary_columns = {'bookmark': 'B_Code', 'favourite': 'FN_Code', 'new': 'N_Code', 'known': 'KN_Code'}
         primary_index = {'bookmark': 'B_', 'favourite': 'FN_', 'new': 'N_', 'known': 'KN_'}
@@ -44,6 +52,12 @@ def mark_word(connection, cursor, word, mark_as):
 
 
 def show_quiz_history(cursor):
+
+    """
+    Display the information of all quizzes that you have been taken.
+
+    """
+
     cursor.execute('SELECT Q_ID, Score, Quiz_Date AS "Quiz Time" FROM PJ_Vocab.Quiz_History ORDER BY Quiz_Date DESC')
 
     table = from_db_cursor(cursor)
@@ -52,6 +66,20 @@ def show_quiz_history(cursor):
 
 
 def read_meaning(cursor, limit=None, sort=False, _display_=False):
+
+    """
+    Read all the meaning from the Database.
+
+    -------------------
+     Options available
+    -------------------
+
+    --> Limit can be applied to the number of rows while displaying the vocabularies.
+    --> Can sort the vocabs Alphabetically by setting sort to "True".
+    --> You can set _display_=True if you want to display the data. Otherwise, the data will only be returned in a list.
+
+    """
+
     cursor.execute('SHOW COLUMNS FROM PJ_Vocab.meaning;')
     col_names = cursor.fetchall()
     col_names = [cols[0] for cols in col_names][1:]
@@ -82,6 +110,20 @@ def read_meaning(cursor, limit=None, sort=False, _display_=False):
 
 
 def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
+
+    """
+    Display vocabularies which are mark as (favorite / bookmark / known / new) words.
+
+    -------------------
+     Options available
+    -------------------
+
+    --> Limit can be applied to the number of rows while displaying the vocabularies.
+    --> Can sort the vocabularies Alphabetically by setting sort to "True".
+    --> You can set _display_=True if you want to display the data. Otherwise, the data will only be returned in a list.
+
+    """
+
     if limit is None:
         if sort:
             cursor.execute(f'''SELECT Word, W_Meaning FROM PJ_Vocab.meaning WHERE M_Code IN 
@@ -108,6 +150,12 @@ def read_marked_data(cursor, mark_as, limit=None, sort=False, _display_=False):
 
 
 def remove_word(cursor, connection, table, word):
+
+    """
+    Clear the M_Code and replace with N/A from respective (favorite / bookmark / known / new) tables.
+    
+    """
+
     try:
         table = table + "_word"
         cursor.execute(f"SELECT M_Code FROM PJ_Vocab.meaning WHERE Word='{word}';")
@@ -126,6 +174,12 @@ def remove_word(cursor, connection, table, word):
 
 
 def check_existence(cursor, m_code, table):
+
+    """
+    Check if the vocabulary exists or not in the destination database.
+    
+    """
+
     cursor.execute(f"SELECT COUNT(*) FROM {table} WHERE M_Code='{m_code}';")
     result = cursor.fetchone()
 
@@ -133,6 +187,12 @@ def check_existence(cursor, m_code, table):
 
 
 def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
+
+    """
+    Transfer Vocabularies from one of (favorite / bookmark / known / new) to another table between branch table.
+    
+    """
+
     try:
         from_tb = from_tb + "_word"
         to_tb = to_tb + "_word"
@@ -181,6 +241,12 @@ def transfer_word(cursor, connection, from_tb, to_tb, word, action=None):
 
 
 def insert_word(connection, cursor, no_of_rows=1):
+
+    """
+    Insert a new word with its definition to the main database.
+    
+    """
+
     try:
         for i in range(no_of_rows):
             word = input("Word : ")
@@ -203,6 +269,12 @@ def insert_word(connection, cursor, no_of_rows=1):
 
 
 def log_quiz_info(connection, cursor, score, q_time):
+
+    """
+    Store the quiz information (Score, Time) to the database.
+    
+    """
+
     try:
 
         cursor.execute('SELECT COUNT(Q_ID) FROM PJ_Vocab.Quiz_History;')
@@ -221,6 +293,12 @@ def log_quiz_info(connection, cursor, score, q_time):
 
 
 def rotate(ans_list):
+
+    """
+    Rotate the position of the definition of quiz word : avoiding the correct answer in the same position.
+
+    """
+
     r_number = randint(0, 10)
 
     # ans_list = [1, 2, 3, 4, 5, 6, 7]
@@ -231,6 +309,14 @@ def rotate(ans_list):
 
 
 def create_questions(data, quiz_words, noq):
+
+    """
+    The purpose of this function is to create multiple question with 4 choices.
+
+    The number of questions can be controlled.
+
+    """
+
     questions = {}
     answers = []
     temp_data = dict(data)
@@ -259,6 +345,11 @@ def create_questions(data, quiz_words, noq):
 
 
 def create_quiz(connection, cursor, quiz_length=3):
+
+    """
+    The purpose of this function is to create the quiz of length x(int).
+
+    """
     data = read_meaning(cursor)
     answered = {}
     total_marks = 0
@@ -313,6 +404,12 @@ def create_quiz(connection, cursor, quiz_length=3):
 
 
 def find_word(cursor, word):
+
+    """
+    Find the desired word from the main database and display its definition.
+
+    """
+
     try:
         cursor.execute(f'SELECT W_Meaning FROM PJ_Vocab.meaning WHERE Word = "{word}"')
         result = cursor.fetchone()[0]
@@ -324,6 +421,12 @@ def find_word(cursor, word):
 
 
 def total_known(cursor):
+
+    """
+    Display the total number of known words.
+
+    """
+
     cursor.execute('SELECT COUNT(*) FROM PJ_Vocab.known_word WHERE M_Code != "N/A";')
     count = cursor.fetchall()[0][0]
     print(f'You have {count} known words')
@@ -331,6 +434,11 @@ def total_known(cursor):
 
 
 def total_new(cursor):
+
+    """
+    Display the total number of new words.
+
+    """
     cursor.execute('SELECT COUNT(*) FROM PJ_Vocab.new_word WHERE M_Code != "N/A";')
     count = cursor.fetchall()[0][0]
     print(f'You have {count} new words')

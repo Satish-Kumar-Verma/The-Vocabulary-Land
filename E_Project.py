@@ -3,6 +3,22 @@ from Helper_Functions import *
 
 
 def welcome(cursor, connection, limit_choice):
+
+    """
+    When program start,
+
+    In the background,a random word is chosen from bookmark_word,
+
+    Ask the definition of that word as a quiz_word,
+
+    it will ask you whether you know the meaning of that word or not.
+
+    If you know that word, it will be mark as a known word otherwise as a new word.
+
+    The program chooseses 4 more random words from bookmark words and display all 5 words along with their definition.
+
+    """
+      
     print('            +---------------------------------------------------------------------------------------------+')
     print('            |                                                                                             |')
     print('            |                                  Welcome to Vocabulary Land                                 |')
