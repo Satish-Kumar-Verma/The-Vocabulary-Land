@@ -71,7 +71,7 @@ Our app will be a great help for every age learners. So, please forward our app 
 <!-- UI DESIGN -->
 ### UI Design
 Our app UI design will be updated for multiplatform after version(1.5.0). Please forward to it.
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">[Back to top(#about-the-project)]</p>
 
 <!-- CONTACT -->
 ### Contact
