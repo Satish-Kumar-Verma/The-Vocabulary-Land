@@ -51,7 +51,7 @@ Moreover, people who use our app will got wonderful advantages.Here's why:
 We built our application with purely Python and for database we use mysql (For version 1.3.0)
 
 <!-- <img src = "(https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.python.org%2Fcommunity%2Flogos%2F&psig=AOvVaw3gk34shAak8fLrBRYbZGyU&ust=1684414343190000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCKCfr8ey_P4CFQAAAAAdAAAAABAw)"> -->
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="##About The Project">back to top</a>)</p>
 
 
 <!-- GETTING STARTED -->
@@ -61,7 +61,7 @@ Here are some step how you can install to use our app.
 
 ### Installation
 Installation will be avaliable after version 1.5.0
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="##About The Project">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ### Usage
@@ -80,7 +80,7 @@ Khant Pyae Phyo - khantpyaephyo@gmail.com<br>
 Hnin Ei Shwe Yee - papillonxyuki@gmail.com<br>
 Project Link - https://github.com/Satish-Kumar-Verma/The-Vocabulary-Land
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="##About The Project">back to top</a>)</p>
 
 
 
