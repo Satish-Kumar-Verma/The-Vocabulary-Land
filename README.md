@@ -82,6 +82,12 @@ Project Link - https://github.com/Satish-Kumar-Verma/The-Vocabulary-Land
 
 <p align="right">(<a href="##About The Project">back to top</a>)</p>
 
+// Back To Top 
+$('a.top').click(function(){ $('html, body').animate({scrollTop : 0},800); return false; });  
+//Create an anchor tag 
+<a class="top" href="#readme" align="right">Back to top</a>
+
+
 
 
 
