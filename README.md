@@ -80,7 +80,7 @@ Khant Pyae Phyo - khantpyaephyo@gmail.com<br>
 Hnin Ei Shwe Yee - papillonxyuki@gmail.com<br>
 Project Link - https://github.com/Satish-Kumar-Verma/The-Vocabulary-Land
 
-<p align="right">(<a href="##About The Project">back to top</a>)</p>
+<p align="right">(<a href="#about-the-project">back to top</a>)</p>
 
 
 [🔼 Back to top](#about-the-project)
