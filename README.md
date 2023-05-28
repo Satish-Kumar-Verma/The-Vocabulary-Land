@@ -1,6 +1,6 @@
 <!-- TABLE OF CONTENTS -->
 <details>
-  <summary><a href="#toc">Table of Contents</a></summary>
+  <summary>Table of Contents</summary>
   <ol>
     <li>
       <a href="#about-the-project">About The Project</a>
@@ -71,7 +71,7 @@ Our app will be a great help for every age learners. So, please forward our app 
 <!-- UI DESIGN -->
 ### UI Design
 Our app UI design will be updated for multiplatform after version(1.5.0). Please forward to it.
-<p align="right">(<a href="#toc">back to top</a>)</p>
+<p align="right">(<a href="#about-the-project">back to top</a>)</p>
 
 <!-- CONTACT -->
 ### Contact
